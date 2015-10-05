@@ -42,6 +42,7 @@ class personBill:
 
 
 ### ~ Constants ~ ###
+
 record_limit = 200
 high_limit = '&limit=' + str(record_limit)
 date_limit = '&congress__gt=110'
@@ -68,7 +69,7 @@ def import_scores_from_json(people, chamber = "senate"):
 			name = member["name"]
 			relevant_people = [person for person in people if person.lastname == name]
 			if len(relevant_people) != 1:
-				print "No person with matching name!"
+				print "No person with name matching " + name
 			else:
 				associated_person = relevant_people[0]
 				associated_person.leadership = member["y"]
@@ -139,6 +140,25 @@ def fetch_votes(bill_ids):
 		except ValueError:
 			print "Value Error for bill with url" + bill_string
 	return person_bills, people
+
+def fetch_cosponsors(bill_ids):
+	person_bills = []
+	people = {}
+	bill_progress = 0
+	for bill_id in bill_ids:
+		bill_progress += 1
+		print bill_progress
+		bill_string = 'http://www.govtrack.us/api/v2/bill/' + str(bill_id)
+		bill_json = requests.get(bill_string).json()
+		cosponsoring_people = bill_json['cosponsors']
+		print "Found " + str(len(cosponsoring_people)) + ' cosponsors!'
+		for cosponsor in cosponsoring_people:
+			person = person_from_json(cosponsor)
+			if person.id in senate_members:
+				people[person.id] = person
+				person_bills.append(personBill(person.id, bill_id))
+	return person_bills, people
+
 
 
 #Fetches all person information based on govtrack id.
@@ -220,7 +240,7 @@ def draw_chart(spectrum, people):
 		x = person.ideology# x coordinate, general/sponsorship ideology
 		y = spectrum[i]# y coordinate, specific/vote ideology
 		color = 'g' #We'll use green for Independants
-		print person.party
+		#print person.party
 		if person.party == "Republican":
 			color = 'r'
 		if person.party == "Democrat":
@@ -231,10 +251,14 @@ def draw_chart(spectrum, people):
 
 ### ~ Main Runtime ~ ###
 
-def generate_vote_spectrum(terms, chamber = "senate"):
+def generate_vote_spectrum(terms, chamber = "senate", save = False):
 	bills = fetch_relevant_bill_ids(terms)
 	print "Fetched "  + str(len(bills)) + " Bills!"
 	votes, people = fetch_votes(bills)
+	if save:
+		save_file = open("saved_results/" + chamber + '_'.join(terms), 'w')
+		save_json_string = ''
+		save_json_string += "{ 'votes' : " + str(votes) + " , 'people' : " + str(people) + "}"
 	print "Fetched "  + str(len(votes)) +  " person votes accross " + str(len(people)) + " people!"
 	people_list = people.values()
 	import_scores_from_json(people_list, chamber)
@@ -245,5 +269,23 @@ def generate_vote_spectrum(terms, chamber = "senate"):
 	print s
 	draw_chart(s, people_list)
 
-search_terms = ['nuclear']
-generate_vote_spectrum(search_terms)
+def generate_cosponsor_spectrum(terms, chamber = "senate", save = False):
+	bills = fetch_relevant_bill_ids(terms)
+	print "Fetched "  + str(len(bills)) + " Bills!"
+	relations, people = fetch_cosponsors(bills)
+	# if save:
+	# 	save_file = open("saved_results/" + chamber + '_'.join(terms), 'w')
+	# 	save_json_string = ''
+	# 	save_json_string += "{ 'votes' : " + str(votes) + " , 'people' : " + str(people) + "}"
+	print "Fetched "  + str(len(relations)) +  " person bills accross " + str(len(people)) + " people!"
+	people_list = people.values()
+	import_scores_from_json(people_list, chamber)
+	people_id_list = [person.id for person in people_list]
+	m = build_matrix(relations, people_id_list)
+	s = matrix_to_spectrum(m)
+	print "AAAAAYYYYYY we did it!!"
+	print s
+	draw_chart(s, people_list)
+
+search_terms = ['Internet']
+generate_cosponsor_spectrum(search_terms)
