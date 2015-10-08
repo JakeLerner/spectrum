@@ -27,6 +27,17 @@ This project (indeed, this readme) is very much a work in progress. This is a ro
 - Visualizes in comparison to cached overall cosponsorship analysis from govtrack
 - If tracks well to parties or is genrally partisan issue, expect general diagonal line. However, outliers.
 
+## TODO:
+
+- Fix Bug which marks peters, sullivan, gardner etc as Sanders-Left Independents
+- Make list of bill titles visible
+- Add command line options for house/senate and issue area
+- Improve this Readme
+- Clean up code
+- Import bulk data into local SQL for wayyyy faster queries
+- Try using scikit learn MDS for linearization of distance matrix
+
+
 ## Design Problems
 - Misses lots of important bills (from previous terms, with different wording)
 - Includes some irrelevant bills (have word for different reason, not very important)

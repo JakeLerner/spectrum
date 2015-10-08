@@ -287,5 +287,5 @@ def generate_cosponsor_spectrum(terms, chamber = "senate", save = False):
 	print s
 	draw_chart(s, people_list)
 
-search_terms = ['Internet']
+search_terms = ['union']
 generate_cosponsor_spectrum(search_terms)
