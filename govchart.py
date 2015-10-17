@@ -4,22 +4,6 @@ import matplotlib.pyplot as plt
 import math
 import numpy
 
-"""
-Generates 2D map of legislators, with X axis representing political ideology per
-govtrack.com, and Y axis representing a voting record for bills containing specified
-terms (ie 'nuclear', 'Internet', etc.)
-
-Design Questions:
- - Only counting aye votes: Subtract for differing votes?
- - Too Many Votes: Only look at non-procedural votes?
- - Cosponsorship analysis better than vote analysis?
-
-
-Other possibilities / TODOs
- - Allow arbitrary axis selection
- - Think about algorithms and re-write hackey and slow matrix stuff (for larger samples)
-
-"""
 
 ### ~ Classes ~ ###
 
@@ -240,7 +224,6 @@ def draw_chart(spectrum, people):
 		x = person.ideology# x coordinate, general/sponsorship ideology
 		y = spectrum[i]# y coordinate, specific/vote ideology
 		color = 'g' #We'll use green for Independants
-		#print person.party
 		if person.party == "Republican":
 			color = 'r'
 		if person.party == "Democrat":
@@ -273,10 +256,6 @@ def generate_cosponsor_spectrum(terms, chamber = "senate", save = False):
 	bills = fetch_relevant_bill_ids(terms)
 	print "Fetched "  + str(len(bills)) + " Bills!"
 	relations, people = fetch_cosponsors(bills)
-	# if save:
-	# 	save_file = open("saved_results/" + chamber + '_'.join(terms), 'w')
-	# 	save_json_string = ''
-	# 	save_json_string += "{ 'votes' : " + str(votes) + " , 'people' : " + str(people) + "}"
 	print "Fetched "  + str(len(relations)) +  " person bills accross " + str(len(people)) + " people!"
 	people_list = people.values()
 	import_scores_from_json(people_list, chamber)
