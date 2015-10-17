@@ -38,7 +38,3 @@ Specifically, given a keyword or set of keywords, the code fetches all bills fro
 ## How to play with it
 
 To generate an image, just enter your desired search terms into the second to last line of govchart.py (command line support for this is on the to-do list), and run "python govchart.py" from the correct directory. As this queries the govtrack API, you need internet access. A spectrum of candidates along the issue area of your choice is about a coffee break away!
-
-## Conclusion
-
-This doohicky is still pretty rough. It has some methodological flaws, some UI flaws, and (as you know if you've gotten this far in this readme) some documentation flaws. But I believe that it's still A) pretty fun and B) a valuable tool for expressing how nt all issues fall neatly along partisan lines, and presenting the idea that political beliefs or records might be expressed as N-dimensional vectors or points in N-dimensional space.
