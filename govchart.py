@@ -3,6 +3,7 @@ import json
 import matplotlib.pyplot as plt
 import math
 import numpy
+import sys
 
 
 ### ~ Classes ~ ###
@@ -71,7 +72,7 @@ def fetch_relevant_bill_ids(term_list, chamber = "senate"):
 		#url_fetch_string = requests.get('http://www.govtrack.us/api/v2/bill?q=' + '|'.join(term_list) + date_limit + high_limit)
 		bill_json= requests.get(fetch_url).json()
 		total_bills = bill_json['meta']['total_count']
-		print "There are " + str(total_bills) + " total bills"
+		#print "There are " + str(total_bills) + " total bills"
 		relevant_ids = [item['id'] for item in bill_json['objects'] if item['bill_type'] in senate_bill_types]
 		#print [item['bill_type'] for item in bill_json['objects']]
 		offset = 0
@@ -83,7 +84,7 @@ def fetch_relevant_bill_ids(term_list, chamber = "senate"):
 			bill_json= requests.get(fetch_url).json()
 			relevant_ids += [item['id'] for item in bill_json['objects'] if item['bill_type'] in senate_bill_types]
 			#print [item['bill_type'] for item in bill_json['objects']]
-		print ("Fetched " + str(len(relevant_ids)) + " bills!")
+		#print ("Fetched " + str(len(relevant_ids)) + " bills!")
 		return relevant_ids
 	except ValueError:
 		print "Value Error for initial Bill Query: "
@@ -125,17 +126,17 @@ def fetch_votes(bill_ids):
 			print "Value Error for bill with url" + bill_string
 	return person_bills, people
 
+# Takes in a list of bill_ids and returns a list of personBills representing Co-Sponsorships
 def fetch_cosponsors(bill_ids):
 	person_bills = []
 	people = {}
 	bill_progress = 0
 	for bill_id in bill_ids:
 		bill_progress += 1
-		print bill_progress
 		bill_string = 'http://www.govtrack.us/api/v2/bill/' + str(bill_id)
 		bill_json = requests.get(bill_string).json()
 		cosponsoring_people = bill_json['cosponsors']
-		print "Found " + str(len(cosponsoring_people)) + ' cosponsors!'
+		print str(bill_progress) + " - Found " + str(len(cosponsoring_people)) + ' cosponsors!'
 		for cosponsor in cosponsoring_people:
 			person = person_from_json(cosponsor)
 			if person.id in senate_members:
@@ -164,6 +165,7 @@ def fetch_people(person_ids):
 def build_matrix(person_bill_list, person_list = None, bill_list = None):
 	m = [] # Resultant Matrix
 
+	#Default to complete lists (with repeats removed) if no lists specified
 	if not person_list:
 		person_list = list(set([person_bill.person for person_bill in person_bill_list]))
 	else:
@@ -186,6 +188,7 @@ def build_matrix(person_bill_list, person_list = None, bill_list = None):
 	for bill in bill_list:
 		b2p[bill] = [item.person for item in person_bill_list if item.bill == bill]
 
+	# Make an arracy for each person in the matrix, append it to the matrix
 	for person in person_list:
 		#value in each cell is the number of bill voted/sponsored in common by the two candidates
 		their_array = [len([bill for bill in p2b[person] if other_person in b2p[bill]]) for other_person in person_list]
@@ -234,6 +237,9 @@ def draw_chart(spectrum, people):
 
 ### ~ Main Runtime ~ ###
 
+
+# Currently, prefer cosponsor spectrum
+# Less grounded in literature, requires more API pulls, less clear results.
 def generate_vote_spectrum(terms, chamber = "senate", save = False):
 	bills = fetch_relevant_bill_ids(terms)
 	print "Fetched "  + str(len(bills)) + " Bills!"
@@ -252,19 +258,36 @@ def generate_vote_spectrum(terms, chamber = "senate", save = False):
 	print s
 	draw_chart(s, people_list)
 
-def generate_cosponsor_spectrum(terms, chamber = "senate", save = False):
+def generate_cosponsor_spectrum(terms, chamber = "senate", save = False, verbose = 1):
+	print "~~~~~~~~~~~~~~~~"
+	print "Beginning New Cosponsor Spectrum Analysis across members of the " + chamber
+	print "Searching for bills containing terms: " + ", ".join(terms)
+	
+	if verbose: print "--> Fetching Bills"
 	bills = fetch_relevant_bill_ids(terms)
-	print "Fetched "  + str(len(bills)) + " Bills!"
+	if verbose: print "Fetched "  + str(len(bills)) + " Bills!"
+	
+	if verbose: print "--> Fetching Person Bills"
 	relations, people = fetch_cosponsors(bills)
-	print "Fetched "  + str(len(relations)) +  " person bills accross " + str(len(people)) + " people!"
+	if verbose: print "Fetched "  + str(len(relations)) +  " person bills accross " + str(len(people)) + " people!"
+	
+	if verbose: print "--> Playing with JSON"
 	people_list = people.values()
 	import_scores_from_json(people_list, chamber)
 	people_id_list = [person.id for person in people_list]
+	
+	if verbose: print "--> Building Matrix"
 	m = build_matrix(relations, people_id_list)
+	
+	if verbose: print "--> Converting to Spectrum"
 	s = matrix_to_spectrum(m)
-	print "AAAAAYYYYYY we did it!!"
+	
+	if verbose: print "--> Drawing Chart"
 	print s
 	draw_chart(s, people_list)
 
-search_terms = ['union']
+####### What runs the code. #####
+#Should probably someday be enclosed in a main function with commandline options or summat.
+
+search_terms = sys.argv[1:]
 generate_cosponsor_spectrum(search_terms)

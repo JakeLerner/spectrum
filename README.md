@@ -23,8 +23,7 @@ Specifically, given a keyword or set of keywords, the code fetches all bills fro
 
 - Fix Bug which marks peters, sullivan, gardner etc as Sanders-Left Independents
 - Make list of bill titles visible
-- Add command line options for house/senate and issue area
-- Improve this Readme
+- Add command line options to toggle house/senate, co-sponsor/vote, and silent/verbose
 - Clean up code
 - Import bulk data into local SQL for wayyyy faster queries
 
@@ -37,4 +36,8 @@ Specifically, given a keyword or set of keywords, the code fetches all bills fro
 
 ## How to play with it
 
-To generate an image, just enter your desired search terms into the second to last line of govchart.py (command line support for this is on the to-do list), and run "python govchart.py" from the correct directory. As this queries the govtrack API, you need internet access. A spectrum of candidates along the issue area of your choice is about a coffee break away!
+To generate an image, download the code, navigate to the directory containing govchart.py and run:
+
+python govchart.py search_term_1 search_term_2 . . . 
+
+As this queries the govtrack API, you need internet access. Depending on internet speed and the number of bills containing your search term, generating the image could take anywhere from less than a minute to around an hour.
