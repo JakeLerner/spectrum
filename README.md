@@ -26,6 +26,7 @@ Specifically, given a keyword or set of keywords, the code fetches all bills fro
 - Add command line options to toggle house/senate, co-sponsor/vote, and silent/verbose
 - Clean up code
 - Import bulk data into local SQL for wayyyy faster queries
+- Add State Legislature support with the sunlight foundation openstates API
 
 
 ## Design Problems

@@ -65,14 +65,14 @@ def import_scores_from_json(people, chamber = "senate"):
 ### ~ API Access ~ ###
 
 # Fetch Bills which contain a word in the given term list.
-def fetch_relevant_bill_ids(term_list, chamber = "senate"):
+def fetch_relevant_bill_ids(term, chamber = "senate"):
 	try:
 		offset = 0
-		fetch_url = 'http://www.govtrack.us/api/v2/bill?q=' + '|'.join(term_list) + date_limit + high_limit + '&offset=' + str(offset)
+		fetch_url = 'http://www.govtrack.us/api/v2/bill?q=' + term + date_limit + high_limit + '&offset=' + str(offset)
 		#url_fetch_string = requests.get('http://www.govtrack.us/api/v2/bill?q=' + '|'.join(term_list) + date_limit + high_limit)
 		bill_json= requests.get(fetch_url).json()
 		total_bills = bill_json['meta']['total_count']
-		#print "There are " + str(total_bills) + " total bills"
+		print "There are " + str(total_bills) + " bills containing " + term
 		relevant_ids = [item['id'] for item in bill_json['objects'] if item['bill_type'] in senate_bill_types]
 		#print [item['bill_type'] for item in bill_json['objects']]
 		offset = 0
@@ -80,11 +80,12 @@ def fetch_relevant_bill_ids(term_list, chamber = "senate"):
 		while seen < total_bills:
 			offset += record_limit
 			seen += record_limit
-			fetch_url = 'http://www.govtrack.us/api/v2/bill?q=' + '|'.join(term_list) + date_limit + high_limit + '&offset=' + str(offset)
+			fetch_url = 'http://www.govtrack.us/api/v2/bill?q=' + term + date_limit + high_limit + '&offset=' + str(offset)
 			bill_json= requests.get(fetch_url).json()
 			relevant_ids += [item['id'] for item in bill_json['objects'] if item['bill_type'] in senate_bill_types]
 			#print [item['bill_type'] for item in bill_json['objects']]
 		#print ("Fetched " + str(len(relevant_ids)) + " bills!")
+		print "Kept " + str(len(relevant_ids))
 		return relevant_ids
 	except ValueError:
 		print "Value Error for initial Bill Query: "
@@ -264,7 +265,9 @@ def generate_cosponsor_spectrum(terms, chamber = "senate", save = False, verbose
 	print "Searching for bills containing terms: " + ", ".join(terms)
 	
 	if verbose: print "--> Fetching Bills"
-	bills = fetch_relevant_bill_ids(terms)
+	bills = []
+	for term in terms:
+		bills += fetch_relevant_bill_ids(term)
 	if verbose: print "Fetched "  + str(len(bills)) + " Bills!"
 	
 	if verbose: print "--> Fetching Person Bills"
@@ -290,4 +293,6 @@ def generate_cosponsor_spectrum(terms, chamber = "senate", save = False, verbose
 #Should probably someday be enclosed in a main function with commandline options or summat.
 
 search_terms = sys.argv[1:]
+
+#Should handle multiple search terms by running fetch_relevant_bill_ids multiple times and combining lists
 generate_cosponsor_spectrum(search_terms)
